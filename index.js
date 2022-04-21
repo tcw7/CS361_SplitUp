@@ -2,6 +2,7 @@
 const express = require('express');
 const app = express();
 const PORT = 7777;
+app.use(express.static('scripts'));
 
 // HANDLEBARS
 const Handlebars = require('handlebars');
@@ -17,9 +18,15 @@ app.engine(
 );
 app.set('view engine', 'hbs');
 
+// STORE
+const store = require('store');
+store.set('members', []);
+store.set('expenses', []);
+// console.log(store.get('members'));
+
 // ROUTES
 app.get('/', (req, res) => {
-    res.render('test');
+    res.render('home');
 });
 
 // Open the PORT

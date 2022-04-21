@@ -1,0 +1,44 @@
+<script src='/home.js'></script>
+<div class='container-sm'>
+    <h1 id='heading'>Welcome to SplitUp!</h1>
+    <br />
+    <p>Ready to split the bill? Enter your name(s) below to get started.</p>
+    <div>
+        <input
+            type='button'
+            id='more_fields'
+            onclick='add_fields();'
+            value='add more names'
+            class='btn btn-secondary'
+        />
+        <br />
+        <br />
+        {{! <label for='more_fields'>Add More</label> }}
+    </div>
+    <div class='form-floating mb-3 input-group'>
+        <input
+            type='text'
+            class='form-control'
+            id='exampleFormControlInput1'
+            placeholder='name'
+        />
+        <label for='exampleFormControlInput1'>Enter your name here:</label>
+        <span style='margin: 0 10px;'></span>
+        <input type='button' class='btn btn-light' value='remove name' />
+    </div>
+    <div class='form-floating mb-3 input-group'>
+        <input
+            type='text'
+            class='form-control'
+            id='exampleFormControlInput2'
+            placeholder='name'
+        />
+        <label for='exampleFormControlInput2'>Enter your name here:</label>
+        <span style='margin: 0 10px;'></span>
+        <input type='button' class='btn btn-light' value='remove name' />
+    </div>
+    <div id='additional-fields'></div>
+    <div>
+        <input type='button' class='btn btn-primary' value='submit' />
+    </div>
+</div>
