@@ -1,7 +1,7 @@
 // EXPRESS
 const express = require('express');
 const app = express();
-const PORT = 7777;
+const PORT = 8080;
 app.use(express.static('scripts'));
 
 // HANDLEBARS
