@@ -1,10 +1,3 @@
-// let heading = document.getElementById('heading');
-
-// heading.addEventListener('click', () => {
-//     store.get('members').push('new thing');
-//     console.log(store.get('members'));
-// });
-
 let userNameNum = 0;
 let userNamesFields = {};
 let qtyUsers = 0;
@@ -94,7 +87,6 @@ let submit_names = () => {
     // show expenses forms
     let hiddenElement = document.getElementById('unhide-me');
     hiddenElement.hidden = false;
-    renderExpense();
 
     return;
 };
