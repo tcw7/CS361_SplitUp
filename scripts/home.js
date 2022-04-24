@@ -28,17 +28,15 @@ let add_fields = () => {
     let objTo = document.getElementById('additional-fields');
     let divtest = document.createElement('div');
     divtest.innerHTML =
-        '<div class="form-floating mb-3" id="userName' +
+        '<div class="form-group mb-3 row" id="userName' +
         userNameNum +
-        '"><input type="text" class="form-control" id="userNameInput' +
+        '"><div class="col-6"><input type="text" class="form-control" id="userNameInput' +
         userNameNum +
-        '" placeholder="name"/><label for="userNameInput' +
-        userNameNum +
-        '">Enter your name here:</label><span style="margin: 0 10px;"></span><input type="button" class="btn btn-light" value="remove name" onclick="remove_name(userName' +
+        '" placeholder="Name"/></div><div class ="col-6"><input type="button" class="btn btn-danger" value="remove name" onclick="remove_name(userName' +
         userNameNum +
         ', userNameInput' +
         userNameNum +
-        '.value)" /></div>';
+        '.value)" /></div></div>';
     objTo.appendChild(divtest);
     userNamesFields[userNameNum] = `userNameInput${userNameNum}`;
     console.log('Added new username input field ' + userNameNum);
@@ -104,10 +102,9 @@ let submit_names = () => {
 let renderExpense = () => {
     expenseNum++;
     let newExpenseForm = document.createElement('div');
+    newExpenseForm.id = `expense${expenseNum}`;
     newExpenseForm.innerHTML =
-        `<form id='expense` +
-        expenseNum +
-        `'>
+        `<form>
         <div class='form-group row'>
             <div class='col-12'>
                 <input
@@ -119,56 +116,92 @@ let renderExpense = () => {
             <br />
             <br />
         </div>
-        <div class='form-group row'>
+        <div id=` +
+        `addUserExpenseHere${expenseNum}` +
+        `>
             <p>How much did each person pay for this? Check the box next
-                to each person that should be included in the SplitUp.</p>
-            <div class='col-1'>
-                <input
-                    class='form-check-input position-static'
-                    type='checkbox'
-                    id='blankCheckbox'
-                    value='option1'
-                    aria-label='...'
-                />
-            </div>
-            <div class='col-5'>
-                <h5>UserName</h5>
-                <input
-                    hidden='true'
-                    type='text'
-                    class='form-control'
-                    placeholder='Expense name'
-                />
-            </div>
-            <div class='col-3'>
-                <input
-                    type='number'
-                    class='form-control'
-                    id='expense'
-                />
-            </div>
-            <div class='col-3'>
-                <select class='form-control'>
-                    <option value='USD'>USD</option>
-                    <option value='EUR'>EUR</option>
-                    <option value='JPY'>JPY</option>
-                    <option value='GBP'>GBP</option>
-                    <option value='CHF'>CHF</option>
-                    <option value='CAD'>CAD</option>
-                    <option value='AUD'>AUD</option>
-                    <option value='CNY'>CNY</option>
-                    <option value='HKD'>HKD</option>
-                    <option value='NZD'>NZD</option>
-                    <option value='MXN'>MXN</option>
-                    <option value='NOK'>NOK</option>
-                    <option value='SGD'>SGD</option>
-                    <option value='KRW'>KRW</option>
-                    <option value='SEK'>SEK</option>
-                </select>
-                <br />
-                <br />
-            </div>
+                to each person that should be included in the SplitUp for this expense.</p>
         </div>
-    </form>`;
+    </form>
+    <div>
+        <input
+            type='button'
+            value='remove expense'
+            onclick='removeExpense(` +
+        `expense${expenseNum}` +
+        `)'
+            class='btn btn-danger'
+        />
+    </div>
+    <br />
+    <br />
+    <br />`;
     document.getElementById(`new-expenses-here`).appendChild(newExpenseForm);
+    for (user of Object.keys(users)) {
+        console.log('Users key: ', user);
+        createUserExpense(`addUserExpenseHere${expenseNum}`, users[user]);
+    }
+};
+
+let removeExpense = (element) => {
+    console.log(`Received request to remove expense...`);
+    element.remove();
+    console.log(`Expense removed.`);
+};
+
+let createUserExpense = (parentElementID, userObj) => {
+    let parentElement = document.getElementById(parentElementID);
+    let newUserExpense = document.createElement('div');
+    newUserExpense.innerHTML =
+        `
+    <div class="form-group row">
+        <div class='col-1'>
+            <input
+                class='form-check-input position-static'
+                type='checkbox'
+                id='blankCheckbox'
+                value='option1'
+                aria-label='...'
+            />
+        </div>
+        <div class='col-5'>
+            <h5>` +
+        `${userObj.name}` +
+        `</h5>
+            <input
+                hidden='true'
+                type='text'
+                class='form-control'
+                placeholder='Expense name'
+            />
+        </div>
+        <div class='col-3'>
+            <input
+                type='number'
+                class='form-control'
+                id='expense'
+            />
+        </div>
+        <div class='col-3'>
+            <select class='form-control'>
+                <option value='USD'>USD</option>
+                <option value='EUR'>EUR</option>
+                <option value='JPY'>JPY</option>
+                <option value='GBP'>GBP</option>
+                <option value='CHF'>CHF</option>
+                <option value='CAD'>CAD</option>
+                <option value='AUD'>AUD</option>
+                <option value='CNY'>CNY</option>
+                <option value='HKD'>HKD</option>
+                <option value='NZD'>NZD</option>
+                <option value='MXN'>MXN</option>
+                <option value='NOK'>NOK</option>
+                <option value='SGD'>SGD</option>
+                <option value='KRW'>KRW</option>
+                <option value='SEK'>SEK</option>
+            </select>
+            <br />
+        </div>
+    </div>`;
+    parentElement.appendChild(newUserExpense);
 };
