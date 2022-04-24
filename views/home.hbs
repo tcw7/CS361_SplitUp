@@ -1,9 +1,10 @@
 <script src='/home.js'></script>
 <div class='container-sm'>
-    <h1 id='heading'>Welcome to SplitUp!</h1>
+    <h1 id='heading' style='text-align: center;'>Welcome to SplitUp!</h1>
     <br />
     <p>Ready to split the bill? Enter your name(s) below to get started.</p>
     <div>
+        {{! add names for users }}
         <input
             type='button'
             id='more_fields'
@@ -13,32 +14,106 @@
         />
         <br />
         <br />
-        {{! <label for='more_fields'>Add More</label> }}
     </div>
-    <div class='form-floating mb-3 input-group'>
-        <input
-            type='text'
-            class='form-control'
-            id='exampleFormControlInput1'
-            placeholder='name'
-        />
-        <label for='exampleFormControlInput1'>Enter your name here:</label>
-        <span style='margin: 0 10px;'></span>
-        <input type='button' class='btn btn-light' value='remove name' />
+    <div id='additional-fields'>
+        {{! new username inputs go here }}
     </div>
-    <div class='form-floating mb-3 input-group'>
-        <input
-            type='text'
-            class='form-control'
-            id='exampleFormControlInput2'
-            placeholder='name'
-        />
-        <label for='exampleFormControlInput2'>Enter your name here:</label>
-        <span style='margin: 0 10px;'></span>
-        <input type='button' class='btn btn-light' value='remove name' />
-    </div>
-    <div id='additional-fields'></div>
     <div>
-        <input type='button' class='btn btn-primary' value='submit' />
+        {{! submit request for new users }}
+        <input
+            type='button'
+            class='btn btn-primary'
+            value='ready'
+            onclick='submit_names()'
+        />
     </div>
+    <br />
+    <br />
+    <div id='unhide-me' hidden='true'>
+        <p>Enter your expense name below: </p>
+        {{! expenses }}
+        <div id='new-expenses-here'>
+            {{! <form id='expense#'>
+                <div class='form-group row'>
+                    <div class='col-12'>
+                        <input
+                            type='text'
+                            class='form-control'
+                            placeholder='Expense name'
+                        />
+                    </div>
+                    <br />
+                    <br />
+                </div>
+                <div class='form-group row'>
+                    <p>How much did each person pay for this? Check the box next
+                        to each person that should be included in the SplitUp.</p>
+                    <div class='col-1'>
+                        <input
+                            class='form-check-input position-static'
+                            type='checkbox'
+                            id='blankCheckbox'
+                            value='option1'
+                            aria-label='...'
+                        />
+                    </div>
+                    <div class='col-5'>
+                        <h5>UserName</h5>
+                        <input
+                            hidden='true'
+                            type='text'
+                            class='form-control'
+                            placeholder='Expense name'
+                        />
+                    </div>
+                    <div class='col-3'>
+                        <input
+                            type='number'
+                            class='form-control'
+                            id='expense'
+                        />
+                    </div>
+                    <div class='col-3'>
+                        <select class='form-control'>
+                            <option value='USD'>USD</option>
+                            <option value='EUR'>EUR</option>
+                            <option value='JPY'>JPY</option>
+                            <option value='GBP'>GBP</option>
+                            <option value='CHF'>CHF</option>
+                            <option value='CAD'>CAD</option>
+                            <option value='AUD'>AUD</option>
+                            <option value='CNY'>CNY</option>
+                            <option value='HKD'>HKD</option>
+                            <option value='NZD'>NZD</option>
+                            <option value='MXN'>MXN</option>
+                            <option value='NOK'>NOK</option>
+                            <option value='SGD'>SGD</option>
+                            <option value='KRW'>KRW</option>
+                            <option value='SEK'>SEK</option>
+                        </select>
+                        <br />
+                        <br />
+                    </div>
+                </div>
+            </form> }}
+        </div>
+        <div>
+            <input
+                type='button'
+                id='more_fields'
+                value='add another expense'
+                onclick='renderExpense()'
+                class='btn btn-secondary'
+            />
+        </div>
+        <br />
+        <br />
+        <div>
+            {{! submit request for SplitUp }}
+            <input type='button' class='btn btn-primary' value='SplitUp!' />
+        </div>
+    </div>
+    <br />
+    <br />
+
 </div>
