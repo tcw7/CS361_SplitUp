@@ -3,14 +3,17 @@ let userNamesFields = {};
 let qtyUsers = 0;
 let users = {};
 let expenseNum = 0;
+let resultCounter = 0;
 
 class User {
     constructor(name) {
         this.name = name;
-        this.expenses = [];
-        this.owed = 0;
+        this.balances = {};
     }
 }
+// ************************************
+// ********* USER GENERATION **********
+// ************************************
 
 /**
  * adds a new name entry field
@@ -44,14 +47,19 @@ let add_fields = () => {
 let remove_name = (element, name) => {
     console.log('Remove element: ' + element.id);
     console.log('Remove User if exists: ' + name);
-    if (users[name]) {
-        delete users[name];
-        console.log('User Removed: ' + name);
-        qtyUsers--;
-        console.log('Qty Users: ', qtyUsers);
+    if (confirm('Are you sure you want to delete this name?')) {
+        if (users[name]) {
+            delete users[name];
+            console.log('User Removed: ' + name);
+            qtyUsers--;
+            console.log('Qty Users: ', qtyUsers);
+        }
+        element.remove();
+        return;
+    } else {
+        console.log('User cancelled name removal request.');
+        return;
     }
-    element.remove();
-    return;
 };
 
 let submit_names = () => {
@@ -84,12 +92,44 @@ let submit_names = () => {
         }
     }
 
+    // check if at least two users have been created
+    if (Object.keys(users).length == 0) {
+        alert(
+            `You haven't entered any names yet. Please enter at least two names to SplitUp your expense(s).`
+        );
+        return;
+    }
+    if (Object.keys(users).length == 1) {
+        alert(
+            `Only one name has been entered. Please enter at least one more name to SplitUp your expense(s).`
+        );
+        return;
+    }
+
+    // disable parent divs
+    let nodes = document
+        .getElementById('add_names_parent')
+        .getElementsByTagName('*');
+    for (let i = 0; i < nodes.length; i++) {
+        nodes[i].onclick = null;
+    }
+    nodes = document
+        .getElementById('additional-fields')
+        .getElementsByTagName('*');
+    for (let i = 0; i < nodes.length; i++) {
+        nodes[i].onclick = null;
+    }
+
     // show expenses forms
     let hiddenElement = document.getElementById('unhide-me');
     hiddenElement.hidden = false;
 
     return;
 };
+
+// ************************************
+// ********* EXPENSE GENERATION **********
+// ************************************
 
 let renderExpense = () => {
     expenseNum++;
@@ -137,8 +177,12 @@ let renderExpense = () => {
 
 let removeExpense = (element) => {
     console.log(`Received request to remove expense...`);
-    element.remove();
-    console.log(`Expense removed.`);
+    if (confirm('Are you sure you want to remove this expense?')) {
+        element.remove();
+        console.log(`Expense removed.`);
+    } else {
+        console.log('User cancelled request to remove expense.');
+    }
 };
 
 let createUserExpense = (parentElementID, userObj) => {
@@ -196,4 +240,84 @@ let createUserExpense = (parentElementID, userObj) => {
         </div>
     </div>`;
     parentElement.appendChild(newUserExpense);
+};
+
+// ************************************
+// ********* RESULTS GENERATION **********
+// ************************************
+
+let renderResults = () => {
+    // remove all child nodes
+    let removeAllChildNodes = (parent) => {
+        while (parent.firstChild) {
+            parent.removeChild(parent.firstChild);
+        }
+    };
+    let parent = document.getElementById('results_root');
+    removeAllChildNodes(parent);
+
+    for (let username of Object.keys(users)) {
+        resultCounter++;
+        let user = users[username];
+        let result = document.createElement('div');
+        let resultsRoot = document.getElementById('results_root');
+        console.log(`Rendering Balance for: ${user.name}...`);
+        result.innerHTML = `<h5>${username}'s Balances:</h5>
+        <div class="container" id="other_user_balance${resultCounter}">
+        </div>`;
+        resultsRoot.appendChild(result);
+
+        // TODO: logic for tabulation of balance
+        for (let name of Object.keys(users)) {
+            console.log(`Checking balance with: ${name}`);
+            if (name != username) {
+                console.log(
+                    `Creating balance between: ${user.name} and ${name}`
+                );
+                createUserBalance(
+                    user,
+                    users[name],
+                    `other_user_balance${resultCounter}`
+                );
+            }
+        }
+    }
+    return;
+};
+
+let createUserBalance = (userOwner, userOther, parentElementID) => {
+    let parentElement = document.getElementById(parentElementID);
+    let userBalance = document.createElement('div');
+    userBalance.innerHTML = `<div class="form-group row"><h6 class="col-6">${userOther.name}:</h6>
+    <h6 class="col-3">$XXX.XX</h6>
+    <select name="select_currency_conversion" id="resultCurrency" class="form-control col">
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="JPY">JPY</option>
+        <option value="GBP">GBP</option>
+        <option value="CHF">CHF</option>
+        <option value="CAD">CAD</option>
+        <option value="AUD">AUD</option>
+        <option value="CNY">CNY</option>
+        <option value="HKD">HKD</option>
+        <option value="NZD">NZD</option>
+        <option value="MXN">MXN</option>
+        <option value="NOK">NOK</option>
+        <option value="SGD">SGD</option>
+        <option value="KRW">KRW</option>
+        <option value="SEK">SEK</option>
+    </select></div>`;
+    parentElement.appendChild(userBalance);
+};
+
+let startOver = () => {
+    if (
+        confirm(
+            'Are you sure you want to start over? You will lose all of your current progress.'
+        )
+    ) {
+        location.reload();
+    } else {
+        return;
+    }
 };

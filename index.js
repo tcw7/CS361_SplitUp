@@ -2,7 +2,7 @@
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 7777;
-app.use(express.static('scripts'));
+app.use(express.static('public'));
 
 // HANDLEBARS
 const Handlebars = require('handlebars');
