@@ -4,6 +4,23 @@ let qtyUsers = 0;
 let users = {};
 let expenseNum = 0;
 let resultCounter = 0;
+let currencies = {
+    USD: null,
+    EUR: null,
+    JPY: null,
+    GBP: null,
+    CHF: null,
+    CAD: null,
+    AUD: null,
+    CNY: null,
+    HKD: null,
+    NZD: null,
+    MXN: null,
+    NOK: null,
+    SGD: null,
+    KRW: null,
+    SEK: null,
+};
 
 class User {
     constructor(name) {
@@ -171,7 +188,11 @@ let renderExpense = () => {
     document.getElementById(`new-expenses-here`).appendChild(newExpenseForm);
     for (user of Object.keys(users)) {
         console.log('Users key: ', user);
-        createUserExpense(`addUserExpenseHere${expenseNum}`, users[user]);
+        createUserExpense(
+            `addUserExpenseHere${expenseNum}`,
+            users[user],
+            expenseNum
+        );
     }
 };
 
@@ -185,7 +206,7 @@ let removeExpense = (element) => {
     }
 };
 
-let createUserExpense = (parentElementID, userObj) => {
+let createUserExpense = (parentElementID, userObj, expenseNum) => {
     let parentElement = document.getElementById(parentElementID);
     let newUserExpense = document.createElement('div');
     newUserExpense.innerHTML =
@@ -195,7 +216,7 @@ let createUserExpense = (parentElementID, userObj) => {
             <input
                 class='form-check-input position-static'
                 type='checkbox'
-                id='blankCheckbox'
+                id='checkbox_${userObj.name}_${expenseNum}'
                 value='option1'
                 aria-label='...'
             />
@@ -215,11 +236,11 @@ let createUserExpense = (parentElementID, userObj) => {
             <input
                 type='number'
                 class='form-control'
-                id='expense'
+                id='cost_${userObj.name}_${expenseNum}'
             />
         </div>
         <div class='col-3'>
-            <select class='form-control'>
+            <select class='form-control' id='currency_${userObj.name}_${expenseNum}'>
                 <option value='USD'>USD</option>
                 <option value='EUR'>EUR</option>
                 <option value='JPY'>JPY</option>
@@ -247,6 +268,13 @@ let createUserExpense = (parentElementID, userObj) => {
 // ************************************
 
 let renderResults = () => {
+    /*
+     * id's of fields:
+     * checkbox_username_expensenum
+     * cost_username_expensenum
+     * currency_username_expensenum
+     */
+
     // remove all child nodes
     let removeAllChildNodes = (parent) => {
         while (parent.firstChild) {
@@ -268,19 +296,25 @@ let renderResults = () => {
         resultsRoot.appendChild(result);
 
         // TODO: logic for tabulation of balance
-        for (let name of Object.keys(users)) {
-            console.log(`Checking balance with: ${name}`);
-            if (name != username) {
-                console.log(
-                    `Creating balance between: ${user.name} and ${name}`
-                );
-                createUserBalance(
-                    user,
-                    users[name],
-                    `other_user_balance${resultCounter}`
-                );
+        let render_balances = async () => {
+            for (let name of Object.keys(users)) {
+                console.log(`Checking balance with: ${name}`);
+                if (name != username) {
+                    console.log(
+                        `Creating balance between: ${user.name} and ${name}`
+                    );
+                    createUserBalance(
+                        user,
+                        users[name],
+                        `other_user_balance${resultCounter}`
+                    );
+                    let value = await calculate_balance(user, users[name]);
+                    document.getElementById(`${user.name}${name}`).innerHTML =
+                        value;
+                }
             }
-        }
+        };
+        render_balances();
     }
     return;
 };
@@ -289,7 +323,7 @@ let createUserBalance = (userOwner, userOther, parentElementID) => {
     let parentElement = document.getElementById(parentElementID);
     let userBalance = document.createElement('div');
     userBalance.innerHTML = `<div class="form-group row"><h6 class="col-6">${userOther.name}:</h6>
-    <h6 class="col-3">$XXX.XX</h6>
+    <h6 class="col-3" id='${userOwner.name}${userOther.name}'></h6>
     <select name="select_currency_conversion" id="resultCurrency" class="form-control col">
         <option value="USD">USD</option>
         <option value="EUR">EUR</option>
@@ -310,6 +344,79 @@ let createUserBalance = (userOwner, userOther, parentElementID) => {
     parentElement.appendChild(userBalance);
 };
 
+let calculate_balance = async (userOwner, userOther) => {
+    let balance = 0;
+    for (let i = 1; i <= expenseNum; i++) {
+        console.log(
+            `Calculating balance between ${userOwner.name} and ${userOther.name}`
+        );
+        let owner_checkbox = document.getElementById(
+            `checkbox_${userOwner.name}_${i}`
+        );
+        let other_checkbox = document.getElementById(
+            `checkbox_${userOther.name}_${i}`
+        );
+        if (!owner_checkbox) {
+            continue;
+        }
+        if (
+            owner_checkbox.checked == 'false' ||
+            other_checkbox.checked == 'false'
+        ) {
+            continue;
+        }
+
+        // tally up values per expense
+        let owner_payment;
+        let other_payment;
+        let total_payment = 0;
+        let qty_payers = 0;
+        for (let name of Object.keys(users)) {
+            let payer_checkbox = document.getElementById(
+                `checkbox_${name}_${i}`
+            );
+            let payer_cost = Number(
+                document.getElementById(`cost_${name}_${i}`).value
+            );
+            let payer_currency = document.getElementById(
+                `currency_${name}_${i}`
+            ).value;
+            if (payer_checkbox.checked == 'false') {
+                continue;
+            }
+            qty_payers += 1;
+            if (payer_cost == '') {
+                payer_cost = 0;
+            }
+            if (payer_currency != 'USD') {
+                if (currencies[payer_currency] == null) {
+                    let rate = await get_currency_per_dollar(payer_currency);
+                    currencies[payer_currency] = rate;
+                    payer_cost = payer_cost / rate;
+                } else {
+                    payer_cost = payer_cost / currencies[payer_currency];
+                }
+            }
+            total_payment += payer_cost;
+            if (payer_checkbox == other_checkbox) {
+                other_payment = payer_cost;
+            }
+            if (owner_checkbox == payer_checkbox) {
+                owner_payment = payer_cost;
+            }
+        }
+        let split = total_payment / qty_payers;
+        console.log(
+            `expense 1: \nowner: ${owner_payment}\nother: ${other_payment}\ntotal: ${total_payment}\nsplit: ${split}`
+        );
+        if (owner_payment < split && other_payment > split) {
+            balance += other_payment - split;
+        }
+        console.log(`Balance for expense ${i}: ${other_payment - split}`);
+    }
+    return Math.round(balance * 100) / 100;
+};
+
 let startOver = () => {
     if (
         confirm(
@@ -320,4 +427,32 @@ let startOver = () => {
     } else {
         return;
     }
+};
+
+// get currency rates using max's microservice
+
+let get_currency_per_dollar = async (currency) => {
+    let rate = null;
+    let get_rate = (rate) => {
+        return new Promise((resolve, reject) => {
+            console.log(`Getting rate for ${currency}:USD`);
+            let request = new XMLHttpRequest();
+            request.open('GET', `/rate?currency=${currency}`, true);
+            request.addEventListener('load', function (event) {
+                if (event.target.status !== 200) {
+                    let message = JSON.parse(event.target.response);
+                    alert('Error getting rate: ' + message.message);
+                    reject(message.message);
+                } else {
+                    console.log('Rate acquired: ', this.responseText);
+                    rate = this.responseText;
+                    resolve(rate);
+                }
+            });
+            request.send();
+        });
+    };
+    rate = await get_rate(rate);
+    console.log('Rate after await: ', rate);
+    return rate;
 };
