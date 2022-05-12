@@ -353,6 +353,13 @@ let createUserBalance = (userOwner, userOther, parentElementID) => {
 };
 
 let calculate_balance = async () => {
+    for (let a of Object.keys(users)) {
+        for (let b of Object.keys(users)) {
+            if (a != b) {
+                users[a].balances[b] = 0;
+            }
+        }
+    }
     for (let i = 1; i <= expenseNum; i++) {
         // console.log(
         //     `Calculating balance between ${userOwner.name} and ${userOther.name}`
@@ -376,9 +383,8 @@ let calculate_balance = async () => {
         // tally up values per expense
         let qty_payers = 0;
         for (let name of Object.keys(users)) {
-            total_payments[name] = 0;
-            total_balances[name] = 0;
-            qty_payers += 1;
+            total_payments[name] = null;
+            total_balances[name] = null;
         }
 
         let total_payment = 0;
@@ -407,16 +413,25 @@ let calculate_balance = async () => {
                     payer_cost = payer_cost / currencies[payer_currency];
                 }
             }
-            total_payments[name] = payer_cost;
+            qty_payers += 1;
             total_payment += payer_cost;
+            total_payments[name] = payer_cost;
         }
         let split = total_payment / qty_payers;
-        for (let usr of Object.keys(users)) {
-            total_balances[usr] = split - total_payments[usr];
+        for (let usr of Object.keys(total_payments)) {
+            if (total_payments[usr] != null) {
+                total_balances[usr] = split - total_payments[usr];
+            }
         }
-        for (let usr_a of Object.keys(users)) {
-            for (let usr_b of Object.keys(users)) {
+        for (let usr_a of Object.keys(total_payments)) {
+            for (let usr_b of Object.keys(total_payments)) {
                 if (usr_b == usr_a) {
+                    continue;
+                }
+                if (
+                    total_payments[usr_a] == null ||
+                    total_payments[usr_b == null]
+                ) {
                     continue;
                 }
                 if (total_balances[usr_a] > 0 && total_balances[usr_b] < 0) {
@@ -437,13 +452,10 @@ let calculate_balance = async () => {
                     );
                     total_balances[usr_b] += single_payment;
                     total_balances[usr_a] -= single_payment;
-                    users[usr_a].balances[usr_b] = single_payment;
-                    users[usr_b].balances[usr_a] = single_payment * -1;
+                    users[usr_a].balances[usr_b] += single_payment;
+                    users[usr_b].balances[usr_a] += single_payment * -1;
                     console.log(`${usr_a}'s balance: ${total_balances[usr_a]}`);
                     console.log(`${usr_b}'s balance: ${total_balances[usr_b]}`);
-                }
-                if (users[usr_a].balances[usr_b] == undefined) {
-                    users[usr_a].balances[usr_b] = 0;
                 }
             }
         }
