@@ -353,6 +353,7 @@ let createUserBalance = (userOwner, userOther, parentElementID) => {
 };
 
 let calculate_balance = async () => {
+    // zero out balances for all users
     for (let a of Object.keys(users)) {
         for (let b of Object.keys(users)) {
             if (a != b) {
@@ -360,34 +361,21 @@ let calculate_balance = async () => {
             }
         }
     }
+
+    // loop over each expense
     for (let i = 1; i <= expenseNum; i++) {
-        // console.log(
-        //     `Calculating balance between ${userOwner.name} and ${userOther.name}`
-        // );
-        // let owner_checkbox = document.getElementById(
-        //     `checkbox_${userOwner.name}_${i}`
-        // );
-        // let other_checkbox = document.getElementById(
-        //     `checkbox_${userOther.name}_${i}`
-        // );
-        // if (!owner_checkbox) {
-        //     continue;
-        // }
-        // if (
-        //     owner_checkbox.checked == false ||
-        //     other_checkbox.checked == false
-        // ) {
-        //     continue;
-        // }
+        // check if expense exists
+        if (!document.getElementById(`expense${i}`)) continue;
 
         // tally up values per expense
         let qty_payers = 0;
+        let total_payment = 0;
         for (let name of Object.keys(users)) {
             total_payments[name] = null;
             total_balances[name] = null;
         }
 
-        let total_payment = 0;
+        // loop through each user's expense
         for (let name of Object.keys(users)) {
             let payer_checkbox = document.getElementById(
                 `checkbox_${name}_${i}`
