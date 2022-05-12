@@ -285,13 +285,12 @@ let renderResults = () => {
     removeAllChildNodes(parent);
 
     for (let username of Object.keys(users)) {
-        resultCounter++;
         let user = users[username];
         let result = document.createElement('div');
         let resultsRoot = document.getElementById('results_root');
         console.log(`Rendering Balance for: ${user.name}...`);
         result.innerHTML = `<h5>${username}'s Balances:</h5>
-        <div class="container" id="other_user_balance${resultCounter}">
+        <div class="container" id="parent_${username}_balances">
         </div>`;
         resultsRoot.appendChild(result);
 
@@ -306,7 +305,7 @@ let renderResults = () => {
                     createUserBalance(
                         user,
                         users[name],
-                        `other_user_balance${resultCounter}`
+                        `parent_${username}_balances`
                     );
                     let value = await calculate_balance(user, users[name]);
                     document.getElementById(`${user.name}${name}`).innerHTML =
@@ -360,8 +359,8 @@ let calculate_balance = async (userOwner, userOther) => {
             continue;
         }
         if (
-            owner_checkbox.checked == 'false' ||
-            other_checkbox.checked == 'false'
+            owner_checkbox.checked == false ||
+            other_checkbox.checked == false
         ) {
             continue;
         }
@@ -381,7 +380,7 @@ let calculate_balance = async (userOwner, userOther) => {
             let payer_currency = document.getElementById(
                 `currency_${name}_${i}`
             ).value;
-            if (payer_checkbox.checked == 'false') {
+            if (payer_checkbox.checked == false) {
                 continue;
             }
             qty_payers += 1;
@@ -407,10 +406,10 @@ let calculate_balance = async (userOwner, userOther) => {
         }
         let split = total_payment / qty_payers;
         console.log(
-            `expense 1: \nowner: ${owner_payment}\nother: ${other_payment}\ntotal: ${total_payment}\nsplit: ${split}`
+            `expense ${i}: \n${userOwner.name}: ${owner_payment}\n${userOther.name}: ${other_payment}\ntotal: ${total_payment}\nsplit: ${split}`
         );
         if (owner_payment < split && other_payment > split) {
-            balance += other_payment - split;
+            balance += Math.min(split - owner_payment, other_payment - split);
         }
         console.log(`Balance for expense ${i}: ${other_payment - split}`);
     }
