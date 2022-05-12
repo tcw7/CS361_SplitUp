@@ -21,6 +21,8 @@ let currencies = {
     KRW: null,
     SEK: null,
 };
+let total_payments = {};
+let total_balances = {};
 
 class User {
     constructor(name) {
@@ -295,26 +297,33 @@ let renderResults = () => {
         resultsRoot.appendChild(result);
 
         // TODO: logic for tabulation of balance
-        let render_balances = async () => {
-            for (let name of Object.keys(users)) {
-                console.log(`Checking balance with: ${name}`);
-                if (name != username) {
-                    console.log(
-                        `Creating balance between: ${user.name} and ${name}`
-                    );
-                    createUserBalance(
-                        user,
-                        users[name],
-                        `parent_${username}_balances`
-                    );
-                    let value = await calculate_balance(user, users[name]);
-                    document.getElementById(`${user.name}${name}`).innerHTML =
-                        value;
-                }
+        for (let name of Object.keys(users)) {
+            console.log(`Checking balance with: ${name}`);
+            if (name != username) {
+                console.log(
+                    `Creating balance between: ${user.name} and ${name}`
+                );
+                createUserBalance(
+                    user,
+                    users[name],
+                    `parent_${username}_balances`
+                );
             }
-        };
-        render_balances();
+        }
     }
+    let render_balances = async () => {
+        let value = await calculate_balance();
+        for (let usr_a of Object.keys(users)) {
+            for (let usr_b of Object.keys(users)) {
+                if (usr_b == usr_a) {
+                    continue;
+                }
+                document.getElementById(`${usr_a}${usr_b}`).innerHTML =
+                    Math.round(users[usr_a].balances[usr_b] * 100) / 100;
+            }
+        }
+    };
+    render_balances();
     return;
 };
 
@@ -343,33 +352,36 @@ let createUserBalance = (userOwner, userOther, parentElementID) => {
     parentElement.appendChild(userBalance);
 };
 
-let calculate_balance = async (userOwner, userOther) => {
-    let balance = 0;
+let calculate_balance = async () => {
     for (let i = 1; i <= expenseNum; i++) {
-        console.log(
-            `Calculating balance between ${userOwner.name} and ${userOther.name}`
-        );
-        let owner_checkbox = document.getElementById(
-            `checkbox_${userOwner.name}_${i}`
-        );
-        let other_checkbox = document.getElementById(
-            `checkbox_${userOther.name}_${i}`
-        );
-        if (!owner_checkbox) {
-            continue;
-        }
-        if (
-            owner_checkbox.checked == false ||
-            other_checkbox.checked == false
-        ) {
-            continue;
-        }
+        // console.log(
+        //     `Calculating balance between ${userOwner.name} and ${userOther.name}`
+        // );
+        // let owner_checkbox = document.getElementById(
+        //     `checkbox_${userOwner.name}_${i}`
+        // );
+        // let other_checkbox = document.getElementById(
+        //     `checkbox_${userOther.name}_${i}`
+        // );
+        // if (!owner_checkbox) {
+        //     continue;
+        // }
+        // if (
+        //     owner_checkbox.checked == false ||
+        //     other_checkbox.checked == false
+        // ) {
+        //     continue;
+        // }
 
         // tally up values per expense
-        let owner_payment;
-        let other_payment;
-        let total_payment = 0;
         let qty_payers = 0;
+        for (let name of Object.keys(users)) {
+            total_payments[name] = 0;
+            total_balances[name] = 0;
+            qty_payers += 1;
+        }
+
+        let total_payment = 0;
         for (let name of Object.keys(users)) {
             let payer_checkbox = document.getElementById(
                 `checkbox_${name}_${i}`
@@ -383,7 +395,6 @@ let calculate_balance = async (userOwner, userOther) => {
             if (payer_checkbox.checked == false) {
                 continue;
             }
-            qty_payers += 1;
             if (payer_cost == '') {
                 payer_cost = 0;
             }
@@ -396,24 +407,49 @@ let calculate_balance = async (userOwner, userOther) => {
                     payer_cost = payer_cost / currencies[payer_currency];
                 }
             }
+            total_payments[name] = payer_cost;
             total_payment += payer_cost;
-            if (payer_checkbox == other_checkbox) {
-                other_payment = payer_cost;
-            }
-            if (owner_checkbox == payer_checkbox) {
-                owner_payment = payer_cost;
-            }
         }
         let split = total_payment / qty_payers;
-        console.log(
-            `expense ${i}: \n${userOwner.name}: ${owner_payment}\n${userOther.name}: ${other_payment}\ntotal: ${total_payment}\nsplit: ${split}`
-        );
-        if (owner_payment < split && other_payment > split) {
-            balance += Math.min(split - owner_payment, other_payment - split);
+        for (let usr of Object.keys(users)) {
+            total_balances[usr] = split - total_payments[usr];
         }
-        console.log(`Balance for expense ${i}: ${other_payment - split}`);
+        for (let usr_a of Object.keys(users)) {
+            for (let usr_b of Object.keys(users)) {
+                if (usr_b == usr_a) {
+                    continue;
+                }
+                if (total_balances[usr_a] > 0 && total_balances[usr_b] < 0) {
+                    console.log(
+                        `Calculating balance between ${usr_a} and ${usr_b}`
+                    );
+                    let single_payment;
+                    if (
+                        Math.abs(total_balances[usr_a]) <
+                        Math.abs(total_balances[usr_b])
+                    ) {
+                        single_payment = total_balances[usr_a];
+                    } else {
+                        single_payment = Math.abs(total_balances[usr_b]);
+                    }
+                    console.log(
+                        `Single payment: ${single_payment} from ${usr_a} to ${usr_b}`
+                    );
+                    total_balances[usr_b] += single_payment;
+                    total_balances[usr_a] -= single_payment;
+                    users[usr_a].balances[usr_b] = single_payment;
+                    users[usr_b].balances[usr_a] = single_payment * -1;
+                    console.log(`${usr_a}'s balance: ${total_balances[usr_a]}`);
+                    console.log(`${usr_b}'s balance: ${total_balances[usr_b]}`);
+                }
+                if (users[usr_a].balances[usr_b] == undefined) {
+                    users[usr_a].balances[usr_b] = 0;
+                }
+            }
+        }
+        console.log(`balances: ${total_balances}`);
     }
-    return Math.round(balance * 100) / 100;
+    return;
 };
 
 let startOver = () => {
