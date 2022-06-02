@@ -1,9 +1,8 @@
-let userNameNum = 0;
-let userNamesFields = {};
-let qtyUsers = 0;
+let user_name_num = 0;
+let user_names_fields = {};
+let qty_users = 0;
 let users = {};
-let expenseNum = 0;
-let resultCounter = 0;
+let expense_num = 0;
 let currencies = {
     USD: null,
     EUR: null,
@@ -40,13 +39,13 @@ class User {
  */
 let add_fields = () => {
     console.log('Received request to add new name...');
-    userNameNum++;
+    user_name_num++;
     let objTo = document.getElementById('additional-fields');
     let divtest = document.createElement('div');
     divtest.innerHTML = render_user_input_html();
     objTo.appendChild(divtest);
-    userNamesFields[userNameNum] = `userNameInput${userNameNum}`;
-    console.log('Added new username input field ' + userNameNum);
+    user_names_fields[user_name_num] = `userNameInput${user_name_num}`;
+    console.log('Added new username input field ' + user_name_num);
     return;
 };
 
@@ -58,8 +57,8 @@ let remove_name = (element, name) => {
         if (users[name]) {
             delete users[name];
             console.log('User Removed: ' + name);
-            qtyUsers--;
-            console.log('Qty Users: ', qtyUsers);
+            qty_users--;
+            console.log('Qty Users: ', qty_users);
         }
         element.remove();
         return;
@@ -89,19 +88,19 @@ let create_users = (names) => {
             let newUser = new User(name);
             users[name] = newUser;
             console.log('New User: ' + users[name].name);
-            qtyUsers++;
-            console.log('Qty Users: ', qtyUsers);
+            qty_users++;
+            console.log('Qty Users: ', qty_users);
         }
     }
     return;
 };
 
 let gather_names = (names) => {
-    for (elementID in userNamesFields) {
+    for (elementID in user_names_fields) {
         console.log(
-            'Submitting name for new User: ' + userNamesFields[elementID]
+            'Submitting name for new User: ' + user_names_fields[elementID]
         );
-        let element = document.getElementById(userNamesFields[elementID]);
+        let element = document.getElementById(user_names_fields[elementID]);
         if (element) {
             let name = element.value;
             element.readOnly = true;
@@ -153,23 +152,23 @@ let disable_input_fields = () => {
 // ********* EXPENSE GENERATION **********
 // ************************************
 
-let renderExpense = () => {
-    expenseNum++;
+let render_expense = () => {
+    expense_num++;
     let newExpenseForm = document.createElement('div');
-    newExpenseForm.id = `expense${expenseNum}`;
-    newExpenseForm.innerHTML = render_expense_html(expenseNum);
+    newExpenseForm.id = `expense${expense_num}`;
+    newExpenseForm.innerHTML = render_expense_html(expense_num);
     document.getElementById(`new-expenses-here`).appendChild(newExpenseForm);
     for (user of Object.keys(users)) {
         console.log('Users key: ', user);
-        createUserExpense(
-            `addUserExpenseHere${expenseNum}`,
+        create_user_expense(
+            `addUserExpenseHere${expense_num}`,
             users[user],
-            expenseNum
+            expense_num
         );
     }
 };
 
-let removeExpense = (element) => {
+let remove_expense = (element) => {
     console.log(`Received request to remove expense...`);
     if (confirm('Are you sure you want to remove this expense?')) {
         element.remove();
@@ -179,10 +178,10 @@ let removeExpense = (element) => {
     }
 };
 
-let createUserExpense = (parentElementID, userObj, expenseNum) => {
+let create_user_expense = (parentElementID, userObj, expense_num) => {
     let parentElement = document.getElementById(parentElementID);
     let newUserExpense = document.createElement('div');
-    newUserExpense.innerHTML = render_user_expense_html(userObj, expenseNum);
+    newUserExpense.innerHTML = render_user_expense_html(userObj, expense_num);
     parentElement.appendChild(newUserExpense);
 };
 
@@ -190,21 +189,21 @@ let createUserExpense = (parentElementID, userObj, expenseNum) => {
 // ********* RESULTS GENERATION **********
 // ************************************
 
-let renderResults = () => {
+let render_results = () => {
     /*
      * id's of fields:
-     * checkbox_username_expensenum
-     * cost_username_expensenum
-     * currency_username_expensenum
+     * checkbox_username_expense_num
+     * cost_username_expense_num
+     * currency_username_expense_num
      */
 
-    removeAllChildNodes(document.getElementById('results_root'));
+    remove_all_child_nodes(document.getElementById('results_root'));
     render_static_balance_html();
     render_balances();
     return;
 };
 
-let removeAllChildNodes = (parent) => {
+let remove_all_child_nodes = (parent) => {
     while (parent.firstChild) {
         parent.removeChild(parent.firstChild);
     }
@@ -226,7 +225,7 @@ let render_static_balance_html = () => {
                 console.log(
                     `Creating balance between: ${user.name} and ${name}`
                 );
-                createUserBalance(
+                create_user_balance(
                     user,
                     users[name],
                     `parent_${username}_balances`
@@ -237,7 +236,7 @@ let render_static_balance_html = () => {
     return;
 };
 
-let createUserBalance = (userOwner, userOther, parentElementID) => {
+let create_user_balance = (userOwner, userOther, parentElementID) => {
     let parentElement = document.getElementById(parentElementID);
     let userBalance = document.createElement('div');
     userBalance.innerHTML = render_tab_html(userOwner, userOther);
@@ -271,7 +270,7 @@ let calculate_master_balance = async () => {
 
 let calculate_expenses = async () => {
     // loop over each expense
-    for (let i = 1; i <= expenseNum; i++) {
+    for (let i = 1; i <= expense_num; i++) {
         let qty_payers = 0;
         let total_payment = 0;
         // check if expense exists
@@ -409,13 +408,9 @@ let convert_balance_currency = async (element) => {
     let base_cur = base_cur_element.innerHTML;
     console.log(bal_value, select_val, base_cur);
     let base_conversion_rate = await get_currency_per_dollar(base_cur);
-    if (base_cur == 'USD') {
-        base_conversion_rate = 1;
-    }
+    if (base_cur == 'USD') base_conversion_rate = 1;
     let next_conversion_rate = await get_currency_per_dollar(select_val);
-    if (select_val == 'USD') {
-        next_conversion_rate = 1;
-    }
+    if (select_val == 'USD') next_conversion_rate = 1;
     bal_value = (bal_value * next_conversion_rate) / base_conversion_rate;
     bal_value = Math.round(bal_value * 1000) / 1000;
     bal_element.innerHTML = bal_value;
@@ -423,7 +418,7 @@ let convert_balance_currency = async (element) => {
     return;
 };
 
-let startOver = () => {
+let start_over = () => {
     if (
         confirm(
             'Are you sure you want to start over? You will lose all of your current progress.'
@@ -440,18 +435,18 @@ let startOver = () => {
 let render_user_input_html = () => {
     let html_content =
         '<div class="form-group mb-3 row" id="userName' +
-        userNameNum +
+        user_name_num +
         '"><div class="col-6"><input type="text" class="form-control" id="userNameInput' +
-        userNameNum +
+        user_name_num +
         '" placeholder="Name"/></div><div class ="col-6"><input type="button" class="btn btn-danger" value="remove name" onclick="remove_name(userName' +
-        userNameNum +
+        user_name_num +
         ', userNameInput' +
-        userNameNum +
+        user_name_num +
         '.value)" /></div></div>';
     return html_content;
 };
 
-let render_expense_html = (expenseNum) => {
+let render_expense_html = (expense_num) => {
     let html_content =
         `<form>
         <div class='form-group row'>
@@ -466,7 +461,7 @@ let render_expense_html = (expenseNum) => {
             <br />
         </div>
         <div id=` +
-        `addUserExpenseHere${expenseNum}` +
+        `addUserExpenseHere${expense_num}` +
         `>
             <p>How much did each person pay for this? Check the box next
                 to each person that should be included in the SplitUp for this expense.</p>
@@ -476,8 +471,8 @@ let render_expense_html = (expenseNum) => {
         <input
             type='button'
             value='remove expense'
-            onclick='removeExpense(` +
-        `expense${expenseNum}` +
+            onclick='remove_expense(` +
+        `expense${expense_num}` +
         `)'
             class='btn btn-danger'
         />
@@ -488,7 +483,7 @@ let render_expense_html = (expenseNum) => {
     return html_content;
 };
 
-let render_user_expense_html = (userObj, expenseNum) => {
+let render_user_expense_html = (userObj, expense_num) => {
     let html_content =
         `
     <div class="form-group row">
@@ -496,7 +491,7 @@ let render_user_expense_html = (userObj, expenseNum) => {
             <input
                 class='form-check-input position-static'
                 type='checkbox'
-                id='checkbox_${userObj.name}_${expenseNum}'
+                id='checkbox_${userObj.name}_${expense_num}'
                 value='option1'
                 aria-label='...'
             />
@@ -516,11 +511,11 @@ let render_user_expense_html = (userObj, expenseNum) => {
             <input
                 type='number'
                 class='form-control'
-                id='cost_${userObj.name}_${expenseNum}'
+                id='cost_${userObj.name}_${expense_num}'
             />
         </div>
         <div class='col-3'>
-            <select class='form-control' id='currency_${userObj.name}_${expenseNum}'>
+            <select class='form-control' id='currency_${userObj.name}_${expense_num}'>
                 <option value='USD'>USD</option>
                 <option value='EUR'>EUR</option>
                 <option value='JPY'>JPY</option>
