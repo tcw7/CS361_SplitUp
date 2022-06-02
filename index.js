@@ -9,8 +9,6 @@ app.use(express.static('public'));
 // HANDLEBARS
 const Handlebars = require('handlebars');
 const exphbs = require('express-handlebars');
-// const template = Handlebars.compile('Name: {{name}}');
-// console.log(template({ name: 'Tyler' }));
 app.engine(
     'hbs',
     exphbs.engine({
@@ -23,6 +21,7 @@ app.set('view engine', 'hbs');
 // STORE
 const store = require('store');
 const res = require('express/lib/response');
+const { options } = require('nodemon/lib/config');
 store.set('members', []);
 store.set('expenses', []);
 let currencies = {
@@ -42,9 +41,10 @@ let currencies = {
     KRW: null,
     SEK: null,
 };
-// console.log(store.get('members'));
 
-// ROUTES
+/**
+ * home page route
+ */
 app.get('/', (req, res) => {
     res.render('home');
 });
@@ -54,6 +54,9 @@ app.listen(PORT, () => {
     console.log(`Listening on port ${PORT}...`);
 });
 
+/**
+ * route handler for Max Belyaev's Exchange Rate API
+ */
 app.get('/rate', (request, response) => {
     currency = request.query.currency;
     rate = null;
@@ -61,43 +64,59 @@ app.get('/rate', (request, response) => {
     if (currencies[currency] != null) {
         response.send(String(currencies[currency]));
     } else {
-        let options = {
-            host: 'exchange-rate-microservice.herokuapp.com',
-            port: 443,
-            path: `/exchangerate/${currency}`,
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        };
-
+        let options = get_server_options(currency);
         const port = options.port == 443 ? https : http;
-
         let output = '';
-
-        const req = port.request(options, (res) => {
-            console.log(`${options.host} : ${res.statusCode}`);
-            res.setEncoding('utf8');
-
-            res.on('data', (chunk) => {
-                output += chunk;
-            });
-
-            res.on('end', () => {
-                let obj = JSON.parse(output);
-                console.log('returned object: ', obj);
-                rate = obj;
-                console.log('Rate: ', rate);
-                if (currencies[currency] == null) {
-                    currencies[currency] = rate;
-                }
-                response.send(String(rate));
-            });
-
-            req.on('error', (err) => {
-                res.send('error: ' + err.message);
-            });
-        });
-        req.end();
+        send_exchange_rate_response(response, options, port, output);
     }
 });
+
+/**
+ * returns an object with HTTP request option headers
+ * @returns
+ */
+let get_server_options = (currency) => {
+    let options = {
+        host: 'exchange-rate-microservice.herokuapp.com',
+        port: 443,
+        path: `/exchangerate/${currency}`,
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    };
+    return options;
+};
+
+/**
+ * calls Max Belyaev's exchnge rate API and returns the resulting
+ * exchange rate
+ * @param {*} options
+ * @param {*} port
+ * @param {*} output
+ * @returns
+ */
+let send_exchange_rate_response = (response, options, port, output) => {
+    const req = port.request(options, (res) => {
+        console.log(`${options.host} : ${res.statusCode}`);
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => {
+            output += chunk;
+        });
+        res.on('end', () => {
+            let obj = JSON.parse(output);
+            console.log('returned object: ', obj);
+            rate = obj;
+            console.log('Rate: ', rate);
+            if (currencies[currency] == null) {
+                currencies[currency] = rate;
+            }
+            response.send(String(rate));
+        });
+        req.on('error', (err) => {
+            res.send('error: ' + err.message);
+        });
+    });
+    req.end();
+    return;
+};

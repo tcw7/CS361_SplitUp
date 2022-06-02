@@ -23,6 +23,9 @@ let currencies = {
 let total_payments = {};
 let total_balances = {};
 
+/**
+ * represents a user to be included in expenses
+ */
 class User {
     constructor(name) {
         this.name = name;
@@ -35,7 +38,10 @@ class User {
 // ************************************
 
 /**
- * adds a new name entry field
+ * event handler for name adding button.
+ * renders new html element for name field.
+ * adds each input element if to user_names_fields global array.
+ * @returns
  */
 let add_fields = () => {
     console.log('Received request to add new name...');
@@ -49,7 +55,13 @@ let add_fields = () => {
     return;
 };
 
-// removes a name from the website
+/**
+ * event handler for remove name button.
+ * checks with user before removing name element.
+ * @param {*} element
+ * @param {*} name
+ * @returns
+ */
 let remove_name = (element, name) => {
     console.log('Remove element: ' + element.id);
     console.log('Remove User if exists: ' + name);
@@ -68,6 +80,9 @@ let remove_name = (element, name) => {
     }
 };
 
+/**
+ * event handler for submit button
+ */
 let submit_names = () => {
     let names = [];
     gather_names(names); // get names from input form
@@ -82,6 +97,12 @@ let submit_names = () => {
     return;
 };
 
+/**
+ * checks name input for valid string, then creates a new
+ * User object global
+ * @param {*} names
+ * @returns
+ */
 let create_users = (names) => {
     for (let name of names) {
         if (typeof users[name] == 'undefined' && name != '') {
@@ -95,6 +116,12 @@ let create_users = (names) => {
     return;
 };
 
+/**
+ * scans through all input name elements through user_names_fields.
+ * adds user input value to names array.
+ * @param {*} names
+ * @returns
+ */
 let gather_names = (names) => {
     for (elementID in user_names_fields) {
         console.log(
@@ -112,6 +139,11 @@ let gather_names = (names) => {
     return;
 };
 
+/**
+ * returns true if at least two names have not been entered.
+ * else returns false.
+ * @returns
+ */
 let user_qty_invalid = () => {
     // case if no valid names have been entered
     if (Object.keys(users).length == 0) {
@@ -132,6 +164,11 @@ let user_qty_invalid = () => {
     return false;
 };
 
+/**
+ * disbales all user interaction with the name input
+ * forms.
+ * @returns
+ */
 let disable_input_fields = () => {
     let nodes = document
         .getElementById('add_names_parent')
@@ -152,6 +189,13 @@ let disable_input_fields = () => {
 // ********* EXPENSE GENERATION **********
 // ************************************
 
+/**
+ * event handler for add expense button.
+ * increments the expense counter, renders new html for the expense header,
+ * and appends the new html to the document.
+ * iterates over each user to generate an input form for personalized expense
+ * values.
+ */
 let render_expense = () => {
     expense_num++;
     let newExpenseForm = document.createElement('div');
@@ -168,6 +212,11 @@ let render_expense = () => {
     }
 };
 
+/**
+ * removes an entire expense element from the document after confirming
+ * with the user.
+ * @param {*} element
+ */
 let remove_expense = (element) => {
     console.log(`Received request to remove expense...`);
     if (confirm('Are you sure you want to remove this expense?')) {
@@ -178,6 +227,13 @@ let remove_expense = (element) => {
     }
 };
 
+/**
+ * creates personalized html for each user to be used as an input form
+ * in the expense section.
+ * @param {*} parentElementID
+ * @param {*} userObj
+ * @param {*} expense_num
+ */
 let create_user_expense = (parentElementID, userObj, expense_num) => {
     let parentElement = document.getElementById(parentElementID);
     let newUserExpense = document.createElement('div');
@@ -189,53 +245,77 @@ let create_user_expense = (parentElementID, userObj, expense_num) => {
 // ********* RESULTS GENERATION **********
 // ************************************
 
+/**
+ * event handler for SplitUp button. removes all previous html elements
+ * that may be already generated for results. renders new html for
+ * each user that includes the balances for every other user respectively.
+ * calls render_balances to execute balance calculation.
+ * @returns
+ */
 let render_results = () => {
-    /*
-     * id's of fields:
-     * checkbox_username_expense_num
-     * cost_username_expense_num
-     * currency_username_expense_num
-     */
-
     remove_all_child_nodes(document.getElementById('results_root'));
     render_static_balance_html();
     render_balances();
     return;
 };
 
+/**
+ * removes all the child nodes within parent.
+ * @param {*} parent
+ */
 let remove_all_child_nodes = (parent) => {
     while (parent.firstChild) {
         parent.removeChild(parent.firstChild);
     }
 };
 
+/**
+ * renders the static html elements for the results section before any
+ * calculations.
+ * @returns
+ */
 let render_static_balance_html = () => {
     for (let username of Object.keys(users)) {
         let user = users[username];
         let result = document.createElement('div');
-        let resultsRoot = document.getElementById('results_root');
+        let results_root = document.getElementById('results_root');
         console.log(`Rendering HTML Balance for: ${user.name}...`);
-        result.innerHTML = `<h5>${username}'s Balances:</h5>
-        <div class="container" id="parent_${username}_balances">
+        result.innerHTML = `<h5>${user.name}'s Balances:</h5>
+        <div class="container" id="parent_${user.name}_balances">
         </div>`;
-        resultsRoot.appendChild(result);
-        for (let name of Object.keys(users)) {
-            console.log(`Checking balance with: ${name}`);
-            if (name != username) {
-                console.log(
-                    `Creating balance between: ${user.name} and ${name}`
-                );
-                create_user_balance(
-                    user,
-                    users[name],
-                    `parent_${username}_balances`
-                );
-            }
+        results_root.appendChild(result);
+        render_static_user_balances(user);
+    }
+    return;
+};
+
+/**
+ * loops through all possible users to qualify each new rendered
+ * user to user balance. renders a new balance if tests pass.
+ * @param {*} user
+ * @returns
+ */
+let render_static_user_balances = (user) => {
+    for (let name of Object.keys(users)) {
+        console.log(`Checking balance with: ${name}`);
+        if (name != user.name) {
+            console.log(`Creating balance between: ${user.name} and ${name}`);
+            create_user_balance(
+                user,
+                users[name],
+                `parent_${user.name}_balances`
+            );
         }
     }
     return;
 };
 
+/**
+ * renders new html for each user to user balance results.
+ * @param {*} userOwner
+ * @param {*} userOther
+ * @param {*} parentElementID
+ */
 let create_user_balance = (userOwner, userOther, parentElementID) => {
     let parentElement = document.getElementById(parentElementID);
     let userBalance = document.createElement('div');
@@ -243,8 +323,14 @@ let create_user_balance = (userOwner, userOther, parentElementID) => {
     parentElement.appendChild(userBalance);
 };
 
+/**
+ * async master function to calculate and render all
+ * user balances.
+ * @returns
+ */
 let render_balances = async () => {
-    let value = await calculate_master_balance();
+    zero_out_balances();
+    await calculate_expenses();
     for (let usr_a of Object.keys(users)) {
         for (let usr_b of Object.keys(users)) {
             if (usr_b == usr_a) {
@@ -257,37 +343,43 @@ let render_balances = async () => {
     return;
 };
 
-let calculate_master_balance = async () => {
-    // zero out balances for all users
+/**
+ * resets all user balances.
+ * @returns
+ */
+let zero_out_balances = () => {
     for (let a of Object.keys(users)) {
         for (let b of Object.keys(users)) {
             if (a != b) users[a].balances[b] = 0;
         }
     }
-    await calculate_expenses();
     return;
 };
 
+/**
+ * loops through every valid expense in the document.
+ * if a valid expense is detected, the global payments
+ * counter is reset to null for each user. then the
+ * split cost for each expense is calculated. each user's
+ * balance is then determined from the amount paid by each
+ * user against the split cost for each expense. this
+ * balance is the added to each user object. finally,
+ * each individual user-to-user balance is adjusted using the
+ * balances calculated previously.
+ * @returns
+ */
 let calculate_expenses = async () => {
-    // loop over each expense
+    let split_cost;
     for (let i = 1; i <= expense_num; i++) {
-        let qty_payers = 0;
-        let total_payment = 0;
-        // check if expense exists
         if (!document.getElementById(`expense${i}`)) continue;
-        zero_out_payments(qty_payers, total_payment);
-        let split;
-        await tabulate_split_cost_per_expense(
-            i,
-            qty_payers,
-            total_payment
-        ).then((value) => {
-            split = value;
+        null_out_payments();
+        await tabulate_split_cost_per_expense(i).then((value) => {
+            split_cost = value;
         });
-        console.log('split: ' + split);
+        console.log('split_cost: ' + split_cost);
         for (let usr of Object.keys(total_payments)) {
             if (total_payments[usr] != null) {
-                total_balances[usr] = split - total_payments[usr];
+                total_balances[usr] = split_cost - total_payments[usr];
                 console.log(total_balances[usr]);
             }
         }
@@ -297,7 +389,11 @@ let calculate_expenses = async () => {
     return;
 };
 
-let zero_out_payments = (qty_payers, total_payment) => {
+/**
+ * resets the global payments counter to null for each user.
+ * @returns
+ */
+let null_out_payments = () => {
     for (let name of Object.keys(users)) {
         total_payments[name] = null;
         total_balances[name] = null;
@@ -305,27 +401,31 @@ let zero_out_payments = (qty_payers, total_payment) => {
     return;
 };
 
-let tabulate_split_cost_per_expense = async (i, qty_payers, total_payment) => {
-    // loop through each user's expense
+/**
+ * checks each user's payment per expense, converting
+ * currency values if necessary. adds up all users' payments
+ * in terms of USD, then splits the cost by the total qty of
+ * payments.
+ * @param {*} iter
+ * @returns
+ */
+let tabulate_split_cost_per_expense = async (iter) => {
+    let qty_payers = 0;
+    let total_payment = 0;
     for (let name of Object.keys(users)) {
-        let payer_checkbox = document.getElementById(`checkbox_${name}_${i}`);
+        let payer_checkbox = document.getElementById(
+            `checkbox_${name}_${iter}`
+        );
+        if (payer_checkbox.checked == false) continue;
         let payer_cost = Number(
-            document.getElementById(`cost_${name}_${i}`).value
+            document.getElementById(`cost_${name}_${iter}`).value
         );
         let payer_currency = document.getElementById(
-            `currency_${name}_${i}`
+            `currency_${name}_${iter}`
         ).value;
-        if (payer_checkbox.checked == false) continue;
-        if (payer_cost == '') payer_cost = 0;
-        if (payer_currency != 'USD') {
-            if (currencies[payer_currency] == null) {
-                let rate = await get_currency_per_dollar(payer_currency);
-                currencies[payer_currency] = rate;
-                payer_cost = payer_cost / rate;
-            } else {
-                payer_cost = payer_cost / currencies[payer_currency];
-            }
-        }
+        await convert_payer_cost(payer_cost, payer_currency).then((value) => {
+            payer_cost = value;
+        });
         qty_payers += 1;
         total_payment += payer_cost;
         total_payments[name] = payer_cost;
@@ -334,6 +434,36 @@ let tabulate_split_cost_per_expense = async (i, qty_payers, total_payment) => {
     return total_payment / qty_payers;
 };
 
+/**
+ * recalculates the payer cost if the currency is not USD. returns
+ * the value of the payer cost in terms of USD.
+ * @param {*} payer_cost
+ * @param {*} payer_currency
+ * @returns
+ */
+let convert_payer_cost = async (payer_cost, payer_currency) => {
+    if (payer_cost == '') return 0;
+    if (payer_currency != 'USD') {
+        if (currencies[payer_currency] == null) {
+            let rate = await get_currency_per_dollar(payer_currency);
+            currencies[payer_currency] = rate;
+            payer_cost = payer_cost / rate;
+        } else {
+            payer_cost = payer_cost / currencies[payer_currency];
+        }
+    }
+    return payer_cost;
+};
+
+/**
+ * checks compatibility of balances between users in O(n^2) time. if two
+ * users have compatible outstanding balances, the function will
+ * execute necessary virtual payments to equalize any possible outstanding
+ * debts.
+ * @param {*} qty_payers
+ * @param {*} total_payment
+ * @returns
+ */
 let calculate_balances_between_users = (qty_payers, total_payment) => {
     for (let usr_a of Object.keys(total_payments)) {
         for (let usr_b of Object.keys(total_payments)) {
@@ -348,6 +478,13 @@ let calculate_balances_between_users = (qty_payers, total_payment) => {
     return;
 };
 
+/**
+ * calculates required payments between users to settle outstanding
+ * balances. adds these payments to a user divided ledger object per user.
+ * @param {*} usr_a
+ * @param {*} usr_b
+ * @returns
+ */
 let execute_balance_adjustment = (usr_a, usr_b) => {
     console.log(`Calculating balance between ${usr_a} and ${usr_b}`);
     let single_payment;
@@ -368,7 +505,11 @@ let execute_balance_adjustment = (usr_a, usr_b) => {
     return;
 };
 
-// get currency rates using max's microservice
+/**
+ * function wrapper for Max's exchange rate API.
+ * @param {*} currency
+ * @returns
+ */
 let get_currency_per_dollar = async (currency) => {
     let rate = null;
     rate = await get_rate(rate, currency);
@@ -376,6 +517,13 @@ let get_currency_per_dollar = async (currency) => {
     return rate;
 };
 
+/**
+ * Uses AJAX to query the server for an exchange rate using
+ * Max Belyaev's exchange rate API.
+ * @param {*} rate
+ * @param {*} currency
+ * @returns
+ */
 let get_rate = (rate, currency) => {
     return new Promise((resolve, reject) => {
         console.log(`Getting rate for ${currency}:USD`);
@@ -396,6 +544,13 @@ let get_rate = (rate, currency) => {
     });
 };
 
+/**
+ * event handler for currency selctor in results section. converts
+ * balance value from the base currency value to the requested
+ * currency value.
+ * @param {*} element
+ * @returns
+ */
 let convert_balance_currency = async (element) => {
     console.log('convert_balance_currency() engaged');
     let select_id = element.id;
@@ -418,6 +573,10 @@ let convert_balance_currency = async (element) => {
     return;
 };
 
+/**
+ * reloads the webpage.
+ * @returns
+ */
 let start_over = () => {
     if (
         confirm(
@@ -432,6 +591,10 @@ let start_over = () => {
 
 // HTML renderers
 
+/**
+ *
+ * @returns static html for user input
+ */
 let render_user_input_html = () => {
     let html_content =
         '<div class="form-group mb-3 row" id="userName' +
@@ -446,6 +609,11 @@ let render_user_input_html = () => {
     return html_content;
 };
 
+/**
+ *
+ * @param {*} expense_num
+ * @returns static html for each expense header
+ */
 let render_expense_html = (expense_num) => {
     let html_content =
         `<form>
@@ -483,6 +651,12 @@ let render_expense_html = (expense_num) => {
     return html_content;
 };
 
+/**
+ *
+ * @param {*} userObj
+ * @param {*} expense_num
+ * @returns static html for each user expense
+ */
 let render_user_expense_html = (userObj, expense_num) => {
     let html_content =
         `
@@ -538,6 +712,12 @@ let render_user_expense_html = (userObj, expense_num) => {
     return html_content;
 };
 
+/**
+ *
+ * @param {*} userOwner
+ * @param {*} userOther
+ * @returns static html for each user balance result
+ */
 let render_tab_html = (userOwner, userOther) => {
     let html_text = `<div class="form-group row"><h6 class="col-6">${userOther.name}:</h6>
     <h6 class="col-3" id='${userOwner.name}${userOther.name}'></h6>
