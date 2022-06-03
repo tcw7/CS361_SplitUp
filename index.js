@@ -38,7 +38,7 @@ let currencies = {
     MXN: null,
     NOK: null,
     SGD: null,
-    KRW: null,
+    // KRW: null,
     SEK: null,
 };
 

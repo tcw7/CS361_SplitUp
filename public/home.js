@@ -17,7 +17,7 @@ let currencies = {
     MXN: null,
     NOK: null,
     SGD: null,
-    KRW: null,
+    // KRW: null,
     SEK: null,
 };
 let total_payments = {};
@@ -703,7 +703,7 @@ let render_user_expense_html = (userObj, expense_num) => {
                 <option value='MXN'>MXN</option>
                 <option value='NOK'>NOK</option>
                 <option value='SGD'>SGD</option>
-                <option value='KRW'>KRW</option>
+                <!--<option value='KRW'>KRW</option>-->
                 <option value='SEK'>SEK</option>
             </select>
             <br />
@@ -736,7 +736,7 @@ let render_tab_html = (userOwner, userOther) => {
         <option value="MXN">MXN</option>
         <option value="NOK">NOK</option>
         <option value="SGD">SGD</option>
-        <option value="KRW">KRW</option>
+        <!--<option value="KRW">KRW</option>-->
         <option value="SEK">SEK</option>
     </select></div>`;
     return html_text;
